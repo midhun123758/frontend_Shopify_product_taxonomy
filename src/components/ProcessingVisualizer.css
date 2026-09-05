@@ -1,0 +1,282 @@
+.visualizer-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 40px 0;
+  padding: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.visualizer-container {
+  width: 300px;
+  height: 250px;
+  perspective: 1200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(60deg) rotateZ(-45deg);
+  transition: transform 0.5s ease;
+}
+
+/* =========================================
+   AI Core Cube
+========================================= */
+.cube-wrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-style: preserve-3d;
+  transform: translateZ(20px);
+}
+
+.cube {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  transform-style: preserve-3d;
+  transform: translate(-50%, -50%);
+}
+
+.scene.active .cube {
+  animation: floatCube 3s ease-in-out infinite, pulseGlow 2s ease-in-out infinite;
+}
+
+.face {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 2px solid rgba(139, 92, 246, 0.8);
+  box-shadow: inset 0 0 15px rgba(139, 92, 246, 0.4);
+  backdrop-filter: blur(4px);
+}
+
+.front  { transform: rotateY(  0deg) translateZ(30px); }
+.back   { transform: rotateY(180deg) translateZ(30px); }
+.right  { transform: rotateY( 90deg) translateZ(30px); }
+.left   { transform: rotateY(-90deg) translateZ(30px); }
+.top    { transform: rotateX( 90deg) translateZ(30px); }
+.bottom { transform: rotateX(-90deg) translateZ(30px); border: none; box-shadow: none; background: rgba(0,0,0,0.5); }
+
+.top-glow {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.8) 0%, transparent 70%);
+  opacity: 0.5;
+}
+.scene.active .top-glow {
+  animation: pulseTop 1.5s infinite alternate;
+}
+
+.core-shadow {
+  position: absolute;
+  top: 0; left: 0;
+  width: 80px; height: 80px;
+  background: rgba(139, 92, 246, 0.3);
+  filter: blur(20px);
+  transform: translate(-50%, -50%) translateZ(-10px);
+  border-radius: 50%;
+}
+.scene.active .core-shadow {
+  animation: pulseShadow 2s infinite alternate;
+}
+
+/* =========================================
+   Data Paths (Tracks)
+========================================= */
+.path {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+}
+
+.pending-path {
+  top: 50%; left: -50px;
+  width: 180px; height: 10px;
+  transform: translateY(-50%);
+}
+
+.completed-path {
+  top: -30px; left: 50%;
+  width: 10px; height: 160px;
+  transform: translateX(-50%);
+}
+
+.review-path {
+  top: 150px; left: 50%;
+  width: 10px; height: 120px;
+  transform: translateX(-50%);
+}
+
+/* =========================================
+   Data Packets
+========================================= */
+.packet {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  transform-style: preserve-3d;
+  opacity: 0;
+}
+
+/* Excel File Styling */
+.excel-file {
+  position: absolute;
+  width: 24px;
+  height: 32px;
+  background: #107c41; /* Excel Green */
+  border-radius: 3px;
+  box-shadow: 0 0 15px rgba(16, 124, 65, 0.6);
+  transform-style: preserve-3d;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  top: 50%; left: -50px;
+  transform: translateY(-50%) translateZ(10px) rotateX(-20deg);
+}
+
+.excel-header {
+  height: 8px;
+  background: #185c37;
+  width: 100%;
+}
+
+.excel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  flex: 1;
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 1px;
+}
+.cell {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.excel-logo {
+  position: absolute;
+  top: -2px; left: -2px;
+  background: #107c41;
+  color: white;
+  font-size: 8px;
+  font-weight: bold;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.packet.completed {
+  background: #10b981; /* Green for completed */
+  box-shadow: 0 0 10px #10b981;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) translateZ(5px);
+}
+
+.packet.review {
+  background: #f59e0b; /* Orange for review */
+  box-shadow: 0 0 10px #f59e0b;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) translateZ(5px);
+}
+
+/* Animations for Objects */
+.scene.active .excel-file { animation: moveInExcel 3s ease-in infinite; }
+
+.scene.active .packet-4 { animation: moveOutCompleted 2.5s linear infinite; animation-delay: 0.3s; }
+.scene.active .packet-5 { animation: moveOutCompleted 2.5s linear infinite; animation-delay: 1.5s; }
+
+.scene.active .packet-6 { animation: moveOutReview 3s linear infinite; animation-delay: 0.8s; }
+
+
+/* =========================================
+   Status Indicator
+========================================= */
+.visualizer-status {
+  margin-top: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.status-active {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary);
+}
+
+.status-idle {
+  color: var(--text-muted);
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--primary);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--primary);
+  animation: blink 1s infinite alternate;
+}
+
+/* =========================================
+   Keyframes
+========================================= */
+@keyframes floatCube {
+  0%, 100% { transform: translate(-50%, -50%) translateZ(0px); }
+  50% { transform: translate(-50%, -50%) translateZ(10px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
+  50% { box-shadow: 0 0 30px rgba(139, 92, 246, 0.8), 0 0 60px rgba(139, 92, 246, 0.4); }
+}
+
+@keyframes pulseTop {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+@keyframes pulseShadow {
+  from { transform: translate(-50%, -50%) translateZ(-10px) scale(1); opacity: 0.3; }
+  to { transform: translate(-50%, -50%) translateZ(-10px) scale(1.2); opacity: 0.6; }
+}
+
+@keyframes blink {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+@keyframes moveInExcel {
+  0% { left: -50px; opacity: 0; transform: translateY(-50%) translateZ(20px) rotateX(-20deg) scale(1); }
+  10% { opacity: 1; }
+  70% { left: 130px; opacity: 1; transform: translateY(-50%) translateZ(20px) rotateX(-20deg) scale(1); }
+  100% { left: 130px; opacity: 0; transform: translateY(-50%) translateZ(0px) rotateX(-20deg) scale(0.1); }
+}
+
+@keyframes moveOutCompleted {
+  0% { top: 50%; opacity: 0; transform: translate(-50%, -50%) translateZ(5px); }
+  10% { opacity: 1; }
+  90% { top: -80px; opacity: 1; }
+  100% { top: -80px; opacity: 0; transform: translate(-50%, -50%) translateZ(5px); }
+}
+
+@keyframes moveOutReview {
+  0% { top: 50%; opacity: 0; transform: translate(-50%, -50%) translateZ(5px); }
+  10% { opacity: 1; }
+  90% { top: 250px; opacity: 1; }
+  100% { top: 250px; opacity: 0; transform: translate(-50%, -50%) translateZ(5px); }
+}

@@ -1,0 +1,113 @@
+.ai-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.ai-modal-card {
+  background: #ffffff;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 0 30px rgba(0, 128, 96, 0.15);
+  border: 1.5px solid #e1e3e5;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Radar Pulse Spinner */
+.radar-spinner-container {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0, 128, 96, 0.2);
+  animation: pulseScale 1.5s ease-out infinite;
+}
+
+.radar-icon {
+  position: relative;
+  z-index: 2;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #e6f4ea;
+  border: 2px solid #008060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 128, 96, 0.25);
+  animation: floatGentle 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseScale {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.success-checkmark-badge {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #e6f4ea;
+  border: 2px solid #008060;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.warning-alert-badge {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #fef3c7;
+  border: 2px solid #b25900;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.bounce-x {
+  animation: bounceRight 1.2s ease-in-out infinite;
+}
+
+@keyframes bounceRight {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(6px); }
+}

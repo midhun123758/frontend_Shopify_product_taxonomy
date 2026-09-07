@@ -1,7 +1,7 @@
 import React from 'react';
 import './ProcessingVisualizer.css';
 
-const ProcessingVisualizer = ({ stats }) => {
+const ProcessingVisualizer = React.memo(({ stats }) => {
   // If we have processing items, or pending items, the pipeline is active.
   const isProcessing = (stats?.processing > 0) || (stats?.pending > 0);
   
@@ -64,6 +64,7 @@ const ProcessingVisualizer = ({ stats }) => {
       </div>
     </div>
   );
-};
+});
 
 export default ProcessingVisualizer;
+

@@ -3,33 +3,104 @@
 }
 
 .drop-zone {
-  border: 2px dashed rgba(99, 102, 241, 0.4);
+  border: 2px dashed rgba(0, 128, 96, 0.3);
   border-radius: 12px;
   padding: 48px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: rgba(15, 17, 23, 0.4);
+  background: #ffffff;
 }
 
 .drop-zone:hover, .drop-zone.dragging {
   border-color: var(--primary);
-  background: rgba(99, 102, 241, 0.05);
-  animation: pulseGlow 2s infinite;
+  background: rgba(0, 168, 120, 0.05);
 }
 
 .drop-zone.has-file {
   border-style: solid;
   border-color: var(--success);
-  background: rgba(16, 185, 129, 0.05);
-  animation: none;
+  background: #e6f4ea;
 }
 
 .error-message {
   margin-top: 16px;
   padding: 12px;
-  background: rgba(239, 68, 68, 0.1);
+  background: #ffebe9;
   border-left: 4px solid var(--danger);
-  color: #fca5a5;
+  color: #d21c1c;
   border-radius: 4px;
+}
+
+/* Hero Banner Entrance & Person Reveal Animations */
+@keyframes heroEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes personZoomIn {
+  0% {
+    transform: scale(1.12) translateY(12px);
+    opacity: 0.7;
+    filter: brightness(1.08) contrast(1.05);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    filter: brightness(1) contrast(1);
+  }
+}
+
+@keyframes gentlePersonFloat {
+  0% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.015) translateY(-5px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+@keyframes titleSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes floatGentle {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-7px); }
+  100% { transform: translateY(0px); }
+}
+
+.hero-banner-container {
+  animation: heroEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.hero-bg-layer {
+  animation: personZoomIn 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+             gentlePersonFloat 6s ease-in-out 1.4s infinite;
+  transform-origin: center center;
+}
+
+.hero-title-header {
+  animation: titleSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+.animated-scroll-btn {
+  animation: floatGentle 3s ease-in-out infinite;
+}
+
+.animated-scroll-btn:hover {
+  box-shadow: 0 8px 24px rgba(0, 128, 96, 0.45) !important;
+  transform: translateY(-3px) scale(1.03);
 }

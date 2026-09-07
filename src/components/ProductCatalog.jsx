@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
-import { FiCheckCircle, FiImage, FiTag, FiCpu, FiChevronRight, FiLayers } from 'react-icons/fi';
+import { FiCheckCircle, FiImage, FiTag, FiCpu, FiChevronRight, FiLayers, FiTrash2 } from 'react-icons/fi';
 import './Dashboard.css'; 
+
+import AIAnalysisModal from './AIAnalysisModal';
 
 const ProductCatalog = () => {
   const navigate = useNavigate();
   const [families, setFamilies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeModalFamily, setActiveModalFamily] = useState(null);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -46,6 +49,19 @@ const ProductCatalog = () => {
     }
   };
 
+  const handleClearData = async () => {
+    if (window.confirm("⚠️ Are you sure you want to clear all imported products, families, and reset the Redis queue?")) {
+      try {
+        await api.clearAllData();
+        alert("✅ Dataset products and Redis queue cleared successfully.");
+        fetchCatalog();
+      } catch (err) {
+        console.error("Failed to clear data:", err);
+        alert("Failed to clear dataset.");
+      }
+    }
+  };
+
   useEffect(() => {
     fetchCatalog();
   }, [debouncedSearch, statusFilter, currentPage]);
@@ -64,16 +80,13 @@ const ProductCatalog = () => {
     return () => clearInterval(interval);
   }, [families]);
 
-  const handleAnalyzeClick = async (e, familyId) => {
+  const handleAnalyzeClick = async (e, family) => {
     e.stopPropagation();
-    setAnalyzingId(familyId);
+    setActiveModalFamily(family);
     try {
-      await api.analyzeFamily(familyId);
-      fetchCatalog();
+      await api.analyzeFamily(family.id);
     } catch (error) {
-      alert("Failed to queue AI processing.");
-    } finally {
-      setAnalyzingId(null);
+      console.error("Failed to queue AI processing:", error);
     }
   };
 
@@ -87,6 +100,16 @@ const ProductCatalog = () => {
         <FiCheckCircle size={48} color="var(--success)" />
         <h2>No Product Families Yet</h2>
         <p style={{ color: 'var(--text-muted)' }}>Upload some products and they will be grouped into families!</p>
+        <button
+          style={{
+            display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px',
+            borderRadius: '8px', fontWeight: 600, background: '#ef4444', color: 'white',
+            border: 'none', cursor: 'pointer'
+          }}
+          onClick={handleClearData}
+        >
+          <FiTrash2 size={16} /> Flush Queue & Clear Database
+        </button>
       </div>
     );
   }
@@ -104,24 +127,76 @@ const ProductCatalog = () => {
           type="text" 
           placeholder="Search by Title or Brand..." 
           className="form-input" 
-          style={{ flex: '1', minWidth: '250px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px' }}
+          style={{ flex: '1', minWidth: '250px', background: '#ffffff', border: '1px solid #c9cccf', color: '#202223', padding: '12px', borderRadius: '8px', fontSize: '0.95rem' }}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         
         <select 
           className="form-input" 
-          style={{ width: '200px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px' }}
+          style={{ width: '200px', background: '#ffffff', border: '1px solid #c9cccf', color: '#202223', padding: '12px', borderRadius: '8px', fontSize: '0.95rem' }}
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
-          <option value="" style={{ color: 'black' }}>All Statuses</option>
-          <option value="PENDING" style={{ color: 'black' }}>Pending</option>
-          <option value="PROCESSING" style={{ color: 'black' }}>Processing</option>
-          <option value="COMPLETED" style={{ color: 'black' }}>Completed</option>
-          <option value="MANUAL_REVIEW" style={{ color: 'black' }}>Manual Review</option>
-          <option value="ERROR" style={{ color: 'black' }}>Error</option>
+          <option value="">All Statuses</option>
+          <option value="PENDING">Pending</option>
+          <option value="PROCESSING">Processing</option>
+          <option value="COMPLETED">Completed</option>
+          <option value="MANUAL_REVIEW">Manual Review</option>
+          <option value="ERROR">Error</option>
         </select>
+
+        {/* Start Bulk AI Classification Button */}
+        <button
+          className="btn-primary"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '12px 20px',
+            borderRadius: '8px',
+            fontWeight: 600,
+            background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.35)',
+            whiteSpace: 'nowrap'
+          }}
+          onClick={async () => {
+            try {
+              const res = await api.resumeProcessing();
+              alert(res.message || "Started background batch AI classification!");
+              fetchCatalog();
+            } catch (err) {
+              alert("Failed to start batch processing.");
+            }
+          }}
+        >
+          <FiCpu size={18} />
+          Start Bulk AI Batch
+        </button>
+
+        {/* Clear Dataset & Reset Queue Button */}
+        <button
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '12px 18px',
+            borderRadius: '8px',
+            fontWeight: 600,
+            background: '#ef4444',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
+          }}
+          onClick={handleClearData}
+        >
+          <FiTrash2 size={16} />
+          Clear Dataset
+        </button>
       </div>
 
       <div className="glass-card">
@@ -144,27 +219,36 @@ const ProductCatalog = () => {
                   style={{ cursor: 'pointer', transition: 'background 0.15s' }}
                 >
                   {/* Image Column */}
-                  <td>
+                  <td style={{ width: '110px' }}>
                     {f.image_url ? (
                       <img
                         src={f.image_url}
                         alt={f.normalized_title}
                         style={{
-                          width: '56px',
-                          height: '56px',
+                          width: '90px',
+                          height: '90px',
                           objectFit: 'cover',
-                          borderRadius: '8px',
-                          border: '1px solid rgba(255,255,255,0.1)'
+                          borderRadius: '12px',
+                          border: '1px solid #c9cccf',
+                          boxShadow: '0 3px 8px rgba(0,0,0,0.08)'
                         }}
                         onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
                       />
                     ) : null}
-                    <div style={{
-                      width: '56px', height: '56px', borderRadius: '8px',
-                      background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                      display: f.image_url ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}>
-                      <FiImage size={22} color="var(--text-muted)" />
+                    <div 
+                      style={{
+                        width: '90px',
+                        height: '90px',
+                        borderRadius: '12px',
+                        background: '#f1f2f3',
+                        border: '1px dashed #c9cccf',
+                        display: f.image_url ? 'none' : 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#6d7175'
+                      }}
+                    >
+                      <FiImage size={24} />
                     </div>
                   </td>
 
@@ -189,29 +273,29 @@ const ProductCatalog = () => {
                     {f.status === 'PENDING' && <span className="badge badge-info" style={{background: 'rgba(156, 163, 175, 0.2)', color: '#9ca3af'}}>Pending</span>}
                     {f.status === 'PROCESSING' && <span className="badge badge-info" style={{background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa'}}>Processing</span>}
                     {f.status === 'MANUAL_REVIEW' && <span className="badge badge-warning">Review Needed</span>}
-                    {f.status === 'ERROR' && <span className="badge badge-error" style={{background: 'rgba(239, 68, 68, 0.2)', color: '#f87171'}}>Error</span>}
+                    {(f.status === 'FAILED' || f.status === 'ERROR') && <span className="badge badge-error" style={{background: 'rgba(239, 68, 68, 0.2)', color: '#f87171'}}>Failed</span>}
                   </td>
 
                   {/* AI & Mapped Category Column */}
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      {f.status === 'PENDING' ? (
-                        <button 
-                          className="btn-primary" 
-                          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', background: 'var(--primary)', border: 'none', color: 'white', fontSize: '0.85rem' }}
-                          onClick={(e) => handleAnalyzeClick(e, f.id)}
-                          disabled={analyzingId === f.id}
-                        >
-                          <FiCpu size={14} />
-                          {analyzingId === f.id ? "Queuing..." : "Analyze AI"}
-                        </button>
-                      ) : (
+                      {f.predicted_category_name ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <FiTag color="var(--primary)" size={14} />
                           <div style={{ color: '#a5b4fc', fontWeight: 500, fontSize: '0.9rem' }}>
-                            {f.predicted_category_name || 'Unknown Category'}
+                            {f.predicted_category_name}
                           </div>
                         </div>
+                      ) : (
+                        <button 
+                          className="btn-primary" 
+                          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', background: 'var(--primary)', border: 'none', color: 'white', fontSize: '0.85rem' }}
+                          onClick={(e) => handleAnalyzeClick(e, f)}
+                          disabled={f.status === 'PROCESSING'}
+                        >
+                          <FiCpu size={14} />
+                          {f.status === 'PROCESSING' ? "Processing..." : "Analyze AI"}
+                        </button>
                       )}
                     </div>
                   </td>
@@ -264,6 +348,17 @@ const ProductCatalog = () => {
           </button>
         </div>
       </div>
+
+      {/* AI ANALYSIS SCANNING OVERLAY MODAL */}
+      {activeModalFamily && (
+        <AIAnalysisModal
+          family={activeModalFamily}
+          onClose={() => {
+            setActiveModalFamily(null);
+            fetchCatalog();
+          }}
+        />
+      )}
       
     </div>
   );

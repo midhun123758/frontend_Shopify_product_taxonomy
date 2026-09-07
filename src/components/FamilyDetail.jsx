@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../api';
-import { FiArrowLeft, FiTag, FiImage, FiLayers, FiPackage, FiChevronRight, FiCheckCircle, FiClock, FiAlertCircle } from 'react-icons/fi';
+import { FiArrowLeft, FiTag, FiImage, FiLayers, FiPackage, FiChevronRight, FiCheckCircle, FiClock, FiAlertCircle, FiCpu } from 'react-icons/fi';
+import AIAnalysisModal from './AIAnalysisModal';
 
 const FamilyDetail = () => {
   const { familyId } = useParams();
@@ -9,22 +10,34 @@ const FamilyDetail = () => {
   const [family, setFamily] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeModalFamily, setActiveModalFamily] = useState(null);
+
+  const fetchFamily = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getFamilyDetail(familyId);
+      setFamily(data);
+    } catch (e) {
+      console.error(e);
+      setError('Failed to load family details.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const data = await api.getFamilyDetail(familyId);
-        setFamily(data);
-      } catch (e) {
-        console.error(e);
-        setError('Failed to load family details.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+    fetchFamily();
   }, [familyId]);
+
+  const handleAnalyzeClick = async () => {
+    if (!family) return;
+    setActiveModalFamily(family);
+    try {
+      await api.analyzeFamily(family.id);
+    } catch (e) {
+      console.error("Failed to queue AI processing:", e);
+    }
+  };
 
   if (loading) return (
     <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
@@ -95,8 +108,8 @@ const FamilyDetail = () => {
             {/* Category Path */}
             {family.predicted_category_name && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-                <FiTag size={16} color="var(--primary)" />
-                <span style={{ color: '#a5b4fc', fontWeight: 600, fontSize: '1rem' }}>
+                <FiTag size={16} color="#008060" />
+                <span style={{ color: '#111827', fontWeight: 800, fontSize: '1.1rem' }}>
                   {family.predicted_category_name}
                 </span>
               </div>
@@ -106,36 +119,50 @@ const FamilyDetail = () => {
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
               {confidencePct && (
                 <span style={{
-                  padding: '4px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 700,
-                  background: confidencePct >= 90 ? 'rgba(16,185,129,0.2)' : 'rgba(251,191,36,0.2)',
-                  color: confidencePct >= 90 ? '#10b981' : '#fbbf24'
+                  padding: '4px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 800,
+                  background: confidencePct >= 90 ? '#e6f4ea' : '#fef3c7',
+                  color: confidencePct >= 90 ? '#008060' : '#b25900',
+                  border: confidencePct >= 90 ? '1px solid #008060' : '1px solid #b25900'
                 }}>
                   {confidencePct}% AI Confidence
                 </span>
               )}
-              <span style={{ background: 'rgba(99,102,241,0.15)', color: '#c7d2fe', padding: '4px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600 }}>
+              <span style={{ background: '#f1f5f9', color: '#1e293b', border: '1px solid #cbd5e1', padding: '4px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 700 }}>
                 <FiLayers size={14} style={{ marginRight: '6px' }} />
                 {(family.products || []).length} Product Variant{(family.products || []).length !== 1 ? 's' : ''}
               </span>
               {family.product_type && (
-                <span style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)', padding: '4px 14px', borderRadius: '20px', fontSize: '0.85rem' }}>
+                <span style={{ background: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1', padding: '4px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600 }}>
                   <FiPackage size={14} style={{ marginRight: '6px' }} />{family.product_type}
                 </span>
               )}
+              <button
+                onClick={handleAnalyzeClick}
+                disabled={family.status === 'PROCESSING'}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  background: '#008060', border: 'none', color: '#ffffff',
+                  padding: '6px 16px', borderRadius: '20px', cursor: 'pointer',
+                  fontWeight: 800, fontSize: '0.85rem', boxShadow: '0 2px 8px rgba(0,128,96,0.3)'
+                }}
+              >
+                <FiCpu size={14} />
+                {family.status === 'PROCESSING' ? 'Processing...' : 'Run AI Analysis'}
+              </button>
             </div>
           </div>
         </div>
 
         {/* Extracted Attributes Banner */}
         {family.extracted_attributes && Object.keys(family.extracted_attributes).length > 0 && (
-          <div style={{ marginTop: '22px', paddingTop: '18px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', fontWeight: 700, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div style={{ marginTop: '22px', paddingTop: '18px', borderTop: '1px solid #e1e3e5' }}>
+            <div style={{ color: '#111827', fontSize: '0.82rem', fontWeight: 800, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               AI Extracted Family Attributes
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
               {Object.entries(family.extracted_attributes).map(([k, v]) => (
-                <span key={k} style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: '8px', padding: '6px 14px', fontSize: '0.85rem' }}>
-                  <strong style={{ color: '#a5b4fc', textTransform: 'capitalize' }}>{k.replace('_', ' ')}:</strong> <span style={{ color: '#fff' }}>{String(v)}</span>
+                <span key={k} style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '6px 14px', fontSize: '0.88rem' }}>
+                  <strong style={{ color: '#4b5563', textTransform: 'capitalize', fontWeight: 700 }}>{k.replace('_', ' ')}:</strong> <span style={{ color: '#000000', fontWeight: 800 }}>{String(v)}</span>
                 </span>
               ))}
             </div>
@@ -148,53 +175,41 @@ const FamilyDetail = () => {
         <h3 style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontWeight: 600 }}>
           Products in this Family ({(family.products || []).length})
         </h3>
-        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Click any product to inspect AI reasoning & metadata</span>
       </div>
 
-      {/* Grid of product variants */}
       <div style={{ display: 'grid', gap: '14px' }}>
-        {(family.products || []).map((product, idx) => (
+        {(family.products || []).map(product => (
           <div
             key={product.id}
             className="glass-card"
             onClick={() => navigate(`/products/${product.id}`)}
             style={{
-              display: 'flex', gap: '20px', alignItems: 'center',
-              cursor: 'pointer', transition: 'all 0.2s ease',
-              border: '1px solid rgba(255,255,255,0.08)',
-              padding: '16px 20px'
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.border = '1px solid rgba(99,102,241,0.5)';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.border = '1px solid rgba(255,255,255,0.08)';
-              e.currentTarget.style.transform = 'translateY(0)';
+              display: 'flex', gap: '16px', alignItems: 'flex-start',
+              cursor: 'pointer', transition: 'border 0.2s',
+              border: '1px solid #e1e3e5'
             }}
           >
-            {/* Thumbnail */}
+            {/* Product Image */}
             <div style={{ flexShrink: 0 }}>
               {product.image_url ? (
-                <img 
-                  src={product.image_url} 
-                  alt={product.title}
-                  style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }} 
-                  onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
-                />
+                <img src={product.image_url} alt={product.title}
+                  style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
               ) : (
-                <div style={{ width: '64px', height: '64px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <FiImage size={24} color="var(--text-muted)" />
+                <div style={{ width: '72px', height: '72px', borderRadius: '8px', background: '#f8fafc', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <FiImage size={24} color="#6d7175" />
                 </div>
               )}
             </div>
 
-            {/* Main Info */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>Variant #{idx + 1}</span>
+            {/* Product Info */}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: '0.98rem', marginBottom: '4px', color: '#111827' }}>{product.title}</div>
+              <div style={{ color: '#6d7175', fontSize: '0.82rem', marginBottom: '8px' }}>
+                SKU: {product.sku || 'N/A'} · ID: #{product.id}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 {product.color && (
-                  <span style={{ fontSize: '0.78rem', background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '4px', color: '#e2e8f0' }}>
+                  <span style={{ background: '#e6f4ea', borderRadius: '5px', padding: '3px 9px', fontSize: '0.8rem', color: '#008060', fontWeight: 700, border: '1px solid rgba(0,128,96,0.3)' }}>
                     Color: {product.color}
                   </span>
                 )}
@@ -208,13 +223,24 @@ const FamilyDetail = () => {
             </div>
 
             {/* Action Arrow */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 500, fontSize: '0.88rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#008060', fontWeight: 700, fontSize: '0.88rem' }}>
               <span>View Analysis</span>
               <FiChevronRight />
             </div>
           </div>
         ))}
       </div>
+
+      {/* AI ANALYSIS SCANNING OVERLAY MODAL */}
+      {activeModalFamily && (
+        <AIAnalysisModal
+          family={activeModalFamily}
+          onClose={() => {
+            setActiveModalFamily(null);
+            fetchFamily();
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../api';
 import './Dashboard.css';
 import ProcessingVisualizer from './ProcessingVisualizer';
-import { FiCheck, FiClock, FiAlertTriangle, FiLoader } from 'react-icons/fi';
+import { FiCheck, FiClock, FiAlertTriangle, FiLoader, FiTrash2 } from 'react-icons/fi';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({ pending: 0, processing: 0, completed: 0, review: 0, total: 0 });
@@ -40,8 +40,32 @@ const Dashboard = () => {
     return <div className="flex-center" style={{ padding: '40px' }}><FiLoader className="spin" size={32} /></div>;
   }
 
+  const handleClearData = async () => {
+    if (window.confirm("⚠️ Are you sure you want to clear all imported products, families, and reset the Redis queue?")) {
+      try {
+        await api.clearAllData();
+        alert("✅ All dataset products and Redis queues cleared successfully.");
+        fetchDashboardData();
+      } catch (err) {
+        console.error("Failed to clear data:", err);
+        alert("Failed to clear data.");
+      }
+    }
+  };
+
   if (stats.total === 0) {
-    return null; // Don't show dashboard if no products exist yet
+    return (
+      <div className="dashboard-container slide-up flex-center" style={{ padding: '60px', flexDirection: 'column', gap: '16px', textAlign: 'center' }}>
+        <h2 className="gradient-text">No Products in Database</h2>
+        <p style={{ color: 'var(--text-muted)' }}>Upload a dataset to view real-time AI classification metrics and controls.</p>
+        <button 
+          style={{ background: '#ef4444', border: 'none', color: '#fff', padding: '10px 20px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+          onClick={handleClearData}
+        >
+          <FiTrash2 size={16} /> Flush Queue & Reset Database
+        </button>
+      </div>
+    );
   }
 
   const handleManualCategorize = async (productId, categoryString) => {
@@ -78,9 +102,9 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container slide-up">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <h2 className="gradient-text" style={{ margin: 0 }}>AI Classification Status</h2>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button 
             style={{ background: '#f59e0b', border: 'none', color: '#fff', padding: '10px 20px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', transition: 'opacity 0.2s' }} 
             onClick={handlePause}
@@ -98,6 +122,14 @@ const Dashboard = () => {
             onMouseOut={(e) => e.target.style.opacity = 1}
           >
             Resume Processing
+          </button>
+          <button 
+            style={{ background: '#ef4444', border: 'none', color: '#fff', padding: '10px 20px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'opacity 0.2s' }} 
+            onClick={handleClearData}
+            onMouseOver={(e) => e.target.style.opacity = 0.8}
+            onMouseOut={(e) => e.target.style.opacity = 1}
+          >
+            <FiTrash2 size={16} /> Reset Queue & Clear Data
           </button>
         </div>
       </div>
@@ -179,10 +211,59 @@ const Dashboard = () => {
               </thead>
               <tbody>
                 {reviewProducts.map(p => (
-                  <tr key={p.id}>
-                    <td>
-                      <div style={{ fontWeight: 500 }}>{p.title}</div>
-                      <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>SKU: {p.sku || 'N/A'}</div>
+                  <tr key={p.id} style={{ borderBottom: '1px solid #e1e3e5' }}>
+                    <td style={{ padding: '16px 20px', minWidth: '280px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        {p.image_url ? (
+                          <img 
+                            src={p.image_url} 
+                            alt={p.normalized_title} 
+                            style={{ 
+                              width: '100px', 
+                              height: '100px', 
+                              objectFit: 'cover', 
+                              borderRadius: '12px', 
+                              border: '1px solid #c9cccf',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                              flexShrink: 0 
+                            }} 
+                          />
+                        ) : (
+                          <div style={{ 
+                            width: '100px', 
+                            height: '100px', 
+                            borderRadius: '12px', 
+                            background: '#f1f2f3', 
+                            border: '1px dashed #c9cccf',
+                            display: 'flex', 
+                            flexDirection: 'column',
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            color: '#5c5f62', 
+                            fontWeight: 700, 
+                            fontSize: '0.85rem', 
+                            flexShrink: 0 
+                          }}>
+                            <FiImage size={24} color="#6d7175" style={{ marginBottom: '4px' }} />
+                            #{p.id}
+                          </div>
+                        )}
+                        <div>
+                          <div style={{ fontWeight: 600, color: '#202223', textTransform: 'capitalize', fontSize: '1rem', lineHeight: '1.35', marginBottom: '4px' }}>
+                            {p.normalized_title || p.title || `Product Family #${p.id}`}
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            {p.brand && (
+                              <span style={{ background: '#eef2ff', color: '#3730a3', fontSize: '0.76rem', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>
+                                {p.brand}
+                              </span>
+                            )}
+                            <span style={{ color: '#6d7175', fontSize: '0.78rem' }}>
+                              ID: #{p.id}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </td>
                     <td>
                       <div style={{ color: 'var(--warning)', fontWeight: 500, fontSize: '0.9rem' }}>

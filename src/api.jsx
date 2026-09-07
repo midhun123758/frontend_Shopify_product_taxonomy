@@ -78,7 +78,33 @@ export const api = {
   getProductDetail: async (productId) => {
     const response = await apiClient.get(`/products/${productId}/detail/`);
     return response.data;
+  },
+
+  searchCategories: async (query = '') => {
+    const response = await apiClient.get(`/categories/search/?q=${encodeURIComponent(query)}`);
+    return response.data;
+  },
+
+  getCategoryWayfind: async (categoryId) => {
+    const response = await apiClient.get(`/categories/${encodeURIComponent(categoryId)}/wayfind/`);
+    return response.data;
+  },
+
+  getBrands: async () => {
+    const response = await apiClient.get('/brands/');
+    return response.data;
+  },
+
+  getBrandDetail: async (brandName) => {
+    const response = await apiClient.get(`/brands/detail/?brand=${encodeURIComponent(brandName)}`);
+    return response.data;
+  },
+
+  clearAllData: async () => {
+    const response = await apiClient.post('/products/clear/');
+    return response.data;
   }
 };
 
 export default api;
+

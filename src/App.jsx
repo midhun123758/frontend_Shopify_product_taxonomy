@@ -1,40 +1,69 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import DragDrop from './components/DragDrop';
 import Dashboard from './components/Dashboard';
 import ProductCatalog from './components/ProductCatalog';
 import CompletedDashboard from './components/CompletedDashboard';
 import FamilyDetail from './components/FamilyDetail';
 import ProductAnalysis from './components/ProductAnalysis';
-import { FiUploadCloud, FiActivity, FiGrid, FiCheckCircle } from 'react-icons/fi';
+import CategoryWayfinder from './components/CategoryWayfinder';
+import BrandCatalog from './components/BrandCatalog';
+import { FiUploadCloud, FiActivity, FiGrid, FiCheckCircle, FiCompass, FiAward } from 'react-icons/fi';
 
 function App() {
+  const getNavStyle = ({ isActive }) => ({
+    textDecoration: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 18px',
+    borderRadius: '10px',
+    fontWeight: 600,
+    fontSize: '0.92rem',
+    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+    background: isActive ? 'rgba(0, 168, 120, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+    color: isActive ? '#34d399' : 'var(--text-muted)',
+    border: isActive ? '1px solid #34d399' : '1px solid rgba(255, 255, 255, 0.08)',
+    boxShadow: isActive ? '0 4px 14px rgba(0, 168, 120, 0.25)' : 'none'
+  });
+
   return (
     <Router>
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
         
         {/* Navigation Header */}
-        <header style={{ marginBottom: '48px', textAlign: 'center' }} className="slide-up">
-          <h1 className="gradient-text" style={{ fontSize: '2.5rem', marginBottom: '8px' }}>
-            Shopify AI Taxonomy
-          </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginBottom: '24px' }}>
-            Autonomous Product Classification & Data Normalization
+        <header style={{ marginBottom: '40px', textAlign: 'center' }} className="slide-up">
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+            <div style={{ background: 'linear-gradient(135deg, #008060, #00a878)', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: '1.2rem', boxShadow: '0 4px 12px rgba(0, 168, 120, 0.4)' }}>
+              S
+            </div>
+            <h1 className="gradient-text" style={{ fontSize: '2.4rem', margin: 0 }}>
+              Shopify AI Taxonomy
+            </h1>
+          </div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem', marginBottom: '24px' }}>
+            Autonomous Product Classification & Data Normalization Engine
           </p>
 
-          <nav style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            <Link to="/upload" className="btn btn-outline" style={{ textDecoration: 'none' }}>
+          <nav style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <NavLink to="/upload" style={getNavStyle}>
               <FiUploadCloud /> Upload Data
-            </Link>
-            <Link to="/dashboard" className="btn btn-outline" style={{ textDecoration: 'none' }}>
+            </NavLink>
+            <NavLink to="/dashboard" style={getNavStyle}>
               <FiActivity /> Live Dashboard
-            </Link>
-            <Link to="/catalog" className="btn btn-outline" style={{ textDecoration: 'none' }}>
+            </NavLink>
+            <NavLink to="/catalog" style={getNavStyle}>
               <FiGrid /> Catalog
-            </Link>
-            <Link to="/completed" className="btn btn-outline" style={{ textDecoration: 'none', borderColor: 'rgba(16,185,129,0.5)', color: '#10b981' }}>
+            </NavLink>
+            <NavLink to="/brands" style={getNavStyle}>
+              <FiAward /> Brands
+            </NavLink>
+            <NavLink to="/wayfinder" style={getNavStyle}>
+              <FiCompass /> Category Wayfinder
+            </NavLink>
+            <NavLink to="/completed" style={getNavStyle}>
               <FiCheckCircle /> Completed
-            </Link>
+            </NavLink>
           </nav>
         </header>
 
@@ -44,6 +73,8 @@ function App() {
             <Route path="/upload" element={<DragDrop />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/catalog" element={<ProductCatalog />} />
+            <Route path="/brands" element={<BrandCatalog />} />
+            <Route path="/wayfinder" element={<CategoryWayfinder />} />
             <Route path="/completed" element={<CompletedDashboard />} />
             <Route path="/families/:familyId" element={<FamilyDetail />} />
             <Route path="/products/:productId" element={<ProductAnalysis />} />
@@ -58,3 +89,4 @@ function App() {
 }
 
 export default App;
+

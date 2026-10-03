@@ -70,8 +70,8 @@ const ProductAnalysis = () => {
   };
 
   return (
-    <div className="slide-up" style={{ maxWidth: '1100px', margin: '0 auto' }}>
-      {/* Breadcrumb Navigation */}
+    <div className="slide-up" style={{ width: '100%', margin: '0 auto' }}>
+      {/* Breadcrumb / Back Button */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', color: '#4b5563', fontSize: '0.88rem', flexWrap: 'wrap' }}>
         <button
           onClick={() => navigate('/catalog')}
@@ -195,19 +195,7 @@ const ProductAnalysis = () => {
                     </div>
                   )}
                 </div>
-                {family.predicted_category && (
-                  <button
-                    onClick={() => navigate(`/wayfinder?id=${family.predicted_category}`)}
-                    style={{
-                      background: '#008060', border: 'none',
-                      color: '#ffffff', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem',
-                      display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700,
-                      boxShadow: '0 2px 8px rgba(0,128,96,0.3)'
-                    }}
-                  >
-                    <FiCompass /> Wayfinder
-                  </button>
-                )}
+
               </div>
             </div>
 

@@ -150,3 +150,11 @@ h1, h2, h3, h4 {
 .badge-completed { background: #e6f4ea; color: #008060; }
 .badge-review { background: #fff4e5; color: #b25900; }
 
+/* Ensure search input displays entered text clearly */
+input.form-input {
+  color: #000000 !important;
+}
+
+input.form-input::placeholder {
+  color: #6d7175 !important;
+}

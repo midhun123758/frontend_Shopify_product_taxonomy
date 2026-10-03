@@ -1,16 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { FiCheckCircle, FiImage, FiTag, FiCpu, FiChevronRight, FiLayers, FiTrash2 } from 'react-icons/fi';
 import './Dashboard.css'; 
 
 import AIAnalysisModal from './AIAnalysisModal';
+import BulkAnimation from './BulkAnimation';
+import { BatchContext } from '../BatchContext';
 
 const ProductCatalog = () => {
   const navigate = useNavigate();
   const [families, setFamilies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeModalFamily, setActiveModalFamily] = useState(null);
+  const [showBulkAnimation, setShowBulkAnimation] = useState(false);
+  const { startBatching } = useContext(BatchContext);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,10 +54,10 @@ const ProductCatalog = () => {
   };
 
   const handleClearData = async () => {
-    if (window.confirm("⚠️ Are you sure you want to clear all imported products, families, and reset the Redis queue?")) {
+    if (window.confirm("âš ï¸ Are you sure you want to clear all imported products, families, and reset the Redis queue?")) {
       try {
         await api.clearAllData();
-        alert("✅ Dataset products and Redis queue cleared successfully.");
+        alert("âœ… Dataset products and Redis queue cleared successfully.");
         fetchCatalog();
       } catch (err) {
         console.error("Failed to clear data:", err);
@@ -70,15 +74,34 @@ const ProductCatalog = () => {
     setCurrentPage(1);
   }, [debouncedSearch, statusFilter]);
 
-  // Polling for live status updates
+  // WebSocket for real-time AI updates
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (families.some(f => f.status === 'PROCESSING')) {
-        fetchCatalog();
+    const ws = new WebSocket(`ws://${window.location.hostname}/ws/updates/`);
+    
+    ws.onmessage = (event) => {
+      // Only process updates for THIS family
+      const data = JSON.parse(event.data);
+      if (data && data.id) {
+        setFamilies(prev => prev.map(f => {
+          if (String(f.id) === String(data.id)) {
+            // If we have a category, treat it as visually completed even if Agent 2 is still extracting attributes
+            const visualStatus = (data.status === 'PROCESSING' && data.predicted_category) ? 'COMPLETED' : data.status;
+            
+            return {
+              ...f,
+              status: visualStatus,
+              confidence_score: data.confidence_score,
+              predicted_category_name: data.predicted_category,
+              alternative_suggestions: data.alternative_suggestions
+            };
+          }
+          return f;
+        }));
       }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [families]);
+    };
+
+    return () => ws.close();
+  }, []);
 
   const handleAnalyzeClick = async (e, family) => {
     e.stopPropagation();
@@ -116,6 +139,7 @@ const ProductCatalog = () => {
 
   return (
     <div className="slide-up">
+      {showBulkAnimation && <BulkAnimation onComplete={() => setShowBulkAnimation(false)} />}
       <h2 className="gradient-text" style={{ marginBottom: '8px' }}>Product Family Catalog</h2>
       <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
         Click any family row to drill down into variants and inspect individual product AI classifications.
@@ -163,14 +187,10 @@ const ProductCatalog = () => {
             boxShadow: '0 4px 12px rgba(99, 102, 241, 0.35)',
             whiteSpace: 'nowrap'
           }}
-          onClick={async () => {
-            try {
-              const res = await api.resumeProcessing();
-              alert(res.message || "Started background batch AI classification!");
-              fetchCatalog();
-            } catch (err) {
-              alert("Failed to start batch processing.");
-            }
+          onClick={() => {
+            startBatching();
+            setShowBulkAnimation(true);
+            fetchCatalog();
           }}
         >
           <FiCpu size={18} />
@@ -365,3 +385,5 @@ const ProductCatalog = () => {
 };
 
 export default ProductCatalog;
+
+

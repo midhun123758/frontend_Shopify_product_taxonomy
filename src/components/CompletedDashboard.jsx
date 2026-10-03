@@ -17,6 +17,7 @@ const CompletedDashboard = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [highlightIds, setHighlightIds] = useState([]);
   const [expanded, setExpanded] = useState(null);
 
   // Debounce search
@@ -33,7 +34,10 @@ const CompletedDashboard = () => {
     setLoading(true);
     try {
       const data = await api.getFamilies(debouncedSearch, 'COMPLETED', currentPage);
-      setFamilies(data.results || []);
+      const results = data.results || [];
+      // Sort on the frontend so newly completed items jump to the top
+      results.sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
+      setFamilies(results);
       setTotalCount(data.count || 0);
       setHasNext(!!data.next);
       setHasPrev(!!data.previous);
@@ -45,6 +49,49 @@ const CompletedDashboard = () => {
   };
 
   useEffect(() => { fetchCompleted(); }, [debouncedSearch, currentPage]);
+
+  // WebSocket for real-time updates
+  useEffect(() => {
+    const ws = new WebSocket(`ws://${window.location.hostname}/ws/updates/`);
+    let fetchTimeout;
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      const isAgent1Done = data.status === 'PROCESSING' && data.predicted_category;
+      const isFullyDone = data.status === 'COMPLETED';
+
+      if (data && data.id && (isFullyDone || isAgent1Done)) {
+        setHighlightIds(prev => [...prev, String(data.id)]);
+        setTimeout(() => {
+          setHighlightIds(prev => prev.filter(id => id !== String(data.id)));
+        }, 3000);
+        
+        // Manually inject it into the frontend list so it appears instantly!
+        // We override the visual status to COMPLETED so it looks correct.
+        const visualData = {
+           ...data,
+           status: 'COMPLETED',
+           predicted_category_name: data.predicted_category
+        };
+
+        setFamilies(prev => {
+           // If it already exists in the list, update it
+           if (prev.some(f => String(f.id) === String(data.id))) {
+              return prev.map(f => String(f.id) === String(data.id) ? { ...f, ...visualData } : f);
+           }
+           // Otherwise, prepend it to the top!
+           return [visualData, ...prev];
+        });
+
+        // We skip the backend fetch because the backend still considers it "PROCESSING"
+      }
+    };
+
+    return () => {
+      clearTimeout(fetchTimeout);
+      ws.close();
+    };
+  }, [debouncedSearch, currentPage]);
 
   const exportCSV = () => {
     const headers = ['Family Title', 'Brand', 'Category', 'Confidence', 'Attributes'];
@@ -132,7 +179,7 @@ const CompletedDashboard = () => {
         {families.map(f => (
           <div
             key={f.id}
-            className="glass-card"
+            className={`glass-card ${highlightIds.includes(String(f.id)) ? 'blink-row' : ''}`}
             style={{
               border: expanded === f.id ? '1px solid rgba(16,185,129,0.5)' : '1px solid rgba(255,255,255,0.07)',
               transition: 'border 0.2s ease',

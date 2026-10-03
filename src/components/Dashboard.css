@@ -93,7 +93,7 @@
 .modern-table td {
   padding: 16px;
   border-bottom: 1px solid #e1e3e5;
-  vertical-align: top;
+  vertical-align: middle;
   color: #202223;
 }
 
@@ -140,4 +140,13 @@
   color: #ffffff;
   transform: translateX(4px);
   box-shadow: 0 4px 12px rgba(0, 128, 96, 0.25);
+}
+
+@keyframes blinkGreen {
+  0% { background-color: rgba(16, 185, 129, 0.5); }
+  100% { background-color: transparent; }
+}
+
+.blink-row {
+  animation: blinkGreen 2s ease-out;
 }

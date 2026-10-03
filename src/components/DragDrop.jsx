@@ -54,8 +54,8 @@ const DragDrop = ({ onUploadSuccess }) => {
       const data = await api.uploadProducts(formData);
       setFile(null);
       if (onUploadSuccess) onUploadSuccess(data);
-      // Auto-redirect directly to Live Dashboard
-      navigate('/dashboard');
+      // Auto-redirect directly to Live Processing Page
+      navigate('/processing');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to upload file. Please ensure the backend is running.');
     } finally {
